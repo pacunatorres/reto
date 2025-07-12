@@ -42,13 +42,11 @@ public class OrderQueueConsumer {
     public void consumeMessages() {
         queueAsyncClient.receiveMessages(5)
             .flatMap(message -> {
-                return Mono.fromCallable(() -> {
-                    String content = message.getMessageText();
-                    log.info("📥 Mensaje recibido:: {}", content);
+                String content = message.getMessageText();
+                log.info("📥 Mensaje recibido: {}", content);
 
+                try {
                     Order order = objectMapper.readValue(content, Order.class);
-                    log.info("📥 order: : {}", order);
-
                     Payment payment = new Payment(
                             UUID.randomUUID().toString(),
                             order.getId(),
@@ -56,21 +54,18 @@ public class OrderQueueConsumer {
                             "PENDING",
                             Instant.now()
                     );
-                    log.info("📥 payment: : {}", payment);
-                    paymentMongoAdapter.save(payment); // suponiendo que esto es void
-                    log.info("✅ payment {}",payment);
 
-                    azureBlobStorageAdapter.saveAudit(payment, "logs/payment-" + payment.getId() + ".json"); // también void
+                    // Cadena reactiva: guardar en Mongo, luego en Blob, luego borrar el mensaje
+                    return paymentMongoAdapter.save(payment)
+                            .then(azureBlobStorageAdapter.saveAudit(payment, "logs/payment-" + payment.getId() + ".json"))
+                            .then(queueAsyncClient.deleteMessage(message.getMessageId(), message.getPopReceipt()))
+                            .doOnSuccess(v -> log.info("✅ Pago procesado y mensaje eliminado"))
+                            .doOnError(e -> log.error("❌ Error en la cadena de procesamiento", e));
 
-                    queueAsyncClient.deleteMessage(message.getMessageId(), message.getPopReceipt())
-                        .subscribe(); // este sí es reactivo
-
-                    log.info("✅ Pago procesado y mensaje eliminado");
-                    return true;
-                }).onErrorResume(e -> {
-                    log.error("❌ Error procesando mensaje", e);
-                    return Mono.empty();
-                });
+                } catch (Exception e) {
+                    log.error("❌ Error parseando mensaje", e);
+                    return Mono.empty(); // continuar con los demás mensajes
+                }
             })
             .subscribe();
     }
