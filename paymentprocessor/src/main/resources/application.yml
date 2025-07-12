@@ -1,0 +1,25 @@
+spring:
+  cloud:
+    azure:
+      storage:
+        queue:
+          account-name: blobstorageaccountpacuna
+          account-key: g5lrfMwaQVa/eC/m89LQ3GXVh22ktZxRpoTAM6e3gHuxX7vzztRpFpBB6m9mf+PFeBn5G7V6Cgcf+AStjlQKFw==
+
+  data:
+    mongodb:
+      host: localhost
+      database: local
+      port: 27017
+
+server:
+  port: 8184
+
+azure:
+  blob:
+    connection-string: "DefaultEndpointsProtocol=https;AccountName=blobstorageaccountpacuna;AccountKey=g5lrfMwaQVa/eC/m89LQ3GXVh22ktZxRpoTAM6e3gHuxX7vzztRpFpBB6m9mf+PFeBn5G7V6Cgcf+AStjlQKFw==;EndpointSuffix=core.windows.net"
+    container-name: conteiner-logs
+  storage:
+    connection-string: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1
+    queue-name: order-queue
+debug: true
