@@ -1,6 +1,5 @@
 package com.store.paymentprocessor.adapter.in.queue;
 
-import com.azure.storage.queue.QueueClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.store.paymentprocessor.adapter.out.mongobd.PaymentMongoAdapter;
@@ -8,15 +7,11 @@ import com.store.paymentprocessor.adapter.out.storage.AzureBlobAuditAdapter;
 import com.store.paymentprocessor.domain.model.Order;
 import com.store.paymentprocessor.domain.model.Payment;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.UUID;
 import com.azure.storage.queue.QueueAsyncClient;
-import com.azure.storage.queue.models.QueueMessageItem;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -44,7 +39,6 @@ public class OrderQueueConsumer {
             .flatMap(message -> {
                 String content = message.getMessageText();
                 log.info("📥 Mensaje recibido: {}", content);
-
                 try {
                     Order order = objectMapper.readValue(content, Order.class);
                     Payment payment = new Payment(
@@ -54,8 +48,6 @@ public class OrderQueueConsumer {
                             "PENDING",
                             Instant.now()
                     );
-
-                    // Cadena reactiva: guardar en Mongo, luego en Blob, luego borrar el mensaje
                     return paymentMongoAdapter.save(payment)
                             .then(azureBlobStorageAdapter.saveAudit(payment, "logs/payment-" + payment.getId() + ".json"))
                             .then(queueAsyncClient.deleteMessage(message.getMessageId(), message.getPopReceipt()))
@@ -64,7 +56,7 @@ public class OrderQueueConsumer {
 
                 } catch (Exception e) {
                     log.error("❌ Error parseando mensaje", e);
-                    return Mono.empty(); // continuar con los demás mensajes
+                    return Mono.empty();
                 }
             })
             .subscribe();

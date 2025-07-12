@@ -22,7 +22,7 @@ public class UpdatePaymentsService implements UpdatePaymentsUseCase {
     @Override
     public Mono<Void> update() {
         return loadPort.loadPendingPayments()
-            .doOnNext(payment -> log.info("Procesando pago: {}", payment.getId()))
+            .doOnNext(payment -> log.info("Procesando pago:: {}", payment.getId()))
             .map(payment -> {
                 payment.setStatus("PROCESSED");
                 payment.setProcessedAt(Instant.now());

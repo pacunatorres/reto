@@ -4,12 +4,16 @@ package com.store.paymentprocessor.adapter.out.storage;
 import com.azure.storage.blob.BlobServiceAsyncClient;
 import com.azure.core.util.BinaryData;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.store.paymentprocessor.domain.exception.AuditUploadException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import com.azure.storage.blob.BlobAsyncClient;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 @Component
 @RequiredArgsConstructor
@@ -19,26 +23,30 @@ public class AzureBlobAuditAdapter {
     private final BlobServiceAsyncClient blobServiceAsyncClient;
     private final ObjectMapper objectMapper;
 
-    private static final String CONTAINER_NAME = "containerlogs";
-
-    /**
-     * Guarda cualquier objeto como archivo JSON en Azure Blob Storage.
-     *
-     * @param event    Objeto a serializar
-     * @param fileName Nombre del archivo (por ejemplo: audit-123.json)
-     * @return Mono<Void>
-     */
+    @Value("${azure.blob.container-name}")
+    private String containerName;
+    
     public Mono<Void> saveAudit(Object event, String fileName) {
-        return Mono.fromCallable(() -> objectMapper.writeValueAsString(event))
+        return serializeEvent(event)
             .flatMap(json -> {
                 BlobAsyncClient blobClient = blobServiceAsyncClient
-                    .getBlobContainerAsyncClient(CONTAINER_NAME)
+                    .getBlobContainerAsyncClient(containerName)
                     .getBlobAsyncClient(fileName);
-
-                return blobClient.upload(BinaryData.fromString(json), true);
+                return blobClient.upload(BinaryData.fromString(json), true)
+                    .doOnSuccess(response -> log.info("Audit almacenado en Azure Blob: {}", fileName))
+                    .doOnError(err -> log.error("Error durante la subida del blob: {}", fileName, err))
+                    .onErrorMap(err -> new AuditUploadException("Error al subir auditoría a Azure Blob", err));
             })
-            .doOnSuccess(r -> log.info("Audit almacenado en Azure Blob: {}", fileName))
-            .doOnError(e -> log.error("Error al guardar auditoría en blob", e))
             .then();
+    }
+
+    private Mono<String> serializeEvent(Object event) {
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            return Mono.just(json);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializando el evento para auditoría", e);
+            return Mono.error(new AuditUploadException("Error serializando auditoría", e));
+        }
     }
 }
