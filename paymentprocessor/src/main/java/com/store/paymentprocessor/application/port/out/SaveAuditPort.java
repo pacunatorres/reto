@@ -1,6 +1,7 @@
 package com.store.paymentprocessor.application.port.out;
 
+import reactor.core.publisher.Mono;
 
 public interface SaveAuditPort {
-    void saveAudit(Object event, String fileName);
+    Mono<Void> saveAudit(Object event, String fileName);
 }

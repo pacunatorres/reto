@@ -9,7 +9,6 @@ import com.store.paymentprocessor.application.port.out.SavePaymentPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -18,6 +17,7 @@ public class UpdatePaymentsService implements UpdatePaymentsUseCase {
     private final LoadPendingPaymentsPort loadPort;
     private final SavePaymentPort savePort;
     private final SaveAuditBlobPort auditPort;
+    private final AzureQueueService azureQueueService;
 
     @Override
     public Mono<Void> update() {
@@ -31,7 +31,8 @@ public class UpdatePaymentsService implements UpdatePaymentsUseCase {
             .flatMap(payment ->
                 savePort.save(payment)
                     .then(auditPort.saveAudit(payment))
+                    .then(azureQueueService.sendMessage("Pago procesado: " + payment.getId()))
             )
-            .then(); // ✅ Devuelve Mono<Void> al final del flujo
+            .then();
     }
 }

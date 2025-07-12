@@ -24,9 +24,13 @@ public class AzureBlobConfig {
     private String containerName;
 
     @Bean
-    public BlobClientBuilder blobClientBuilder() {
-        return new BlobClientBuilder()
+    public BlobServiceAsyncClient blobServiceAsyncClient() {
+        return new BlobServiceClientBuilder()
                 .connectionString(connectionString)
-                .containerName(containerName);
+                .buildAsyncClient();
+    }
+    @Bean
+    public BlobClientBuilder blobClientBuilder() {
+        return new BlobClientBuilder().connectionString(connectionString);
     }
 }

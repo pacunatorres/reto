@@ -20,7 +20,7 @@ public class JacksonConfig {
         return mapper;
     }
 
-    @Bean
+    @Bean(name = "customServerCodecConfigurer")
     public ServerCodecConfigurer serverCodecConfigurer(ObjectMapper objectMapper) {
         ServerCodecConfigurer configurer = ServerCodecConfigurer.create();
         configurer.defaultCodecs().jackson2JsonEncoder(

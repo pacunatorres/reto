@@ -11,7 +11,7 @@
 	<groupId>com.store</groupId>
 	<artifactId>orderservice1</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>orderservice1</name>
+	<name>orderservice</name>
 	<description>Store Online  project for Spring Boot to Reto</description>
 	<url/>
 	<licenses>

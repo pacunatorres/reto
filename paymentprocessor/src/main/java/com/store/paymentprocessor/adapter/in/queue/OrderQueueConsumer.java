@@ -1,70 +1,77 @@
 package com.store.paymentprocessor.adapter.in.queue;
 
-import com.azure.storage.queue.QueueClient;
 import com.azure.storage.queue.QueueClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.store.paymentprocessor.adapter.out.mongobd.PaymentMongoAdapter;
-import com.store.paymentprocessor.adapter.out.storage.AzureBlobStorageAdapter;
+import com.store.paymentprocessor.adapter.out.storage.AzureBlobAuditAdapter;
 import com.store.paymentprocessor.domain.model.Order;
 import com.store.paymentprocessor.domain.model.Payment;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.UUID;
+import com.azure.storage.queue.QueueAsyncClient;
+import com.azure.storage.queue.models.QueueMessageItem;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
 public class OrderQueueConsumer {
-    private final QueueClient queueClient;
+
+    private final QueueAsyncClient queueAsyncClient;
     private final PaymentMongoAdapter paymentMongoAdapter;
-    private final AzureBlobStorageAdapter azureBlobStorageAdapter;
+    private final AzureBlobAuditAdapter azureBlobStorageAdapter;
     private final ObjectMapper objectMapper;
 
     public OrderQueueConsumer(
-            @Value("${azure.storage.connection-string}") String connectionString,
-            @Value("${azure.storage.queue-name}") String queueName,
+            QueueAsyncClient queueAsyncClient,
             PaymentMongoAdapter paymentMongoAdapter,
-            AzureBlobStorageAdapter azureBlobStorageAdapter,
-            ObjectMapper objectMapper 
-            ) {
-
-        this.queueClient = new QueueClientBuilder()
-                .connectionString(connectionString)
-                .queueName(queueName)
-                .buildClient();
-
-        this.queueClient.createIfNotExists();
+            AzureBlobAuditAdapter azureBlobStorageAdapter
+    ) {
+        this.queueAsyncClient = queueAsyncClient;
         this.paymentMongoAdapter = paymentMongoAdapter;
         this.azureBlobStorageAdapter = azureBlobStorageAdapter;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     }
-
-    @Scheduled(fixedRate = 5000) // cada 5 segundos
+    @Scheduled(fixedRate = 5000)
     public void consumeMessages() {
-        queueClient.receiveMessages(5).forEach(message -> {
-            String content = message.getMessageText();
-            log.info("📥 Mensaje recibido de la cola: {}", content);
+        queueAsyncClient.receiveMessages(5)
+            .flatMap(message -> {
+                return Mono.fromCallable(() -> {
+                    String content = message.getMessageText();
+                    log.info("📥 Mensaje recibido:: {}", content);
 
-            try {
-                Order order = objectMapper.readValue(content, Order.class);
-                Payment payment = new Payment(
-                        UUID.randomUUID().toString(),
-                        order.getId(),
-                        order.getPrice() * order.getQuantity(),
-                        "PENDING",
-                        Instant.now()
-                );
-                paymentMongoAdapter.save(payment);
-                log.info("✅ Payment guardado en Mongo: {}", payment);
-                azureBlobStorageAdapter.saveAudit(payment, "logs/payment-" + payment.getId() + ".json");
-                log.info("☁️ Payment audit guardado en Blob");
-            } catch (Exception e) {
-                log.error("❌ Error procesando mensaje: {}", content, e);
-            }
-            queueClient.deleteMessage(message.getMessageId(), message.getPopReceipt());
-        });
+                    Order order = objectMapper.readValue(content, Order.class);
+                    log.info("📥 order: : {}", order);
+
+                    Payment payment = new Payment(
+                            UUID.randomUUID().toString(),
+                            order.getId(),
+                            order.getPrice() * order.getQuantity(),
+                            "PENDING",
+                            Instant.now()
+                    );
+                    log.info("📥 payment: : {}", payment);
+                    paymentMongoAdapter.save(payment); // suponiendo que esto es void
+                    log.info("✅ payment {}",payment);
+
+                    azureBlobStorageAdapter.saveAudit(payment, "logs/payment-" + payment.getId() + ".json"); // también void
+
+                    queueAsyncClient.deleteMessage(message.getMessageId(), message.getPopReceipt())
+                        .subscribe(); // este sí es reactivo
+
+                    log.info("✅ Pago procesado y mensaje eliminado");
+                    return true;
+                }).onErrorResume(e -> {
+                    log.error("❌ Error procesando mensaje", e);
+                    return Mono.empty();
+                });
+            })
+            .subscribe();
     }
 }
