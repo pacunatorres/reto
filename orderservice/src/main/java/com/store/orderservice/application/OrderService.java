@@ -2,10 +2,8 @@ package com.store.orderservice.application;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.store.orderservice.domain.model.Order;
 import com.store.orderservice.infrastructure.adapter.out.QueueOrderPublisher;
-
 import reactor.core.publisher.Mono;
 
 @Service

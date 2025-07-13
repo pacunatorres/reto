@@ -53,7 +53,6 @@ public class OrderQueueConsumer {
                             .then(queueAsyncClient.deleteMessage(message.getMessageId(), message.getPopReceipt()))
                             .doOnSuccess(v -> log.info("✅ Pago procesado y mensaje eliminado"))
                             .doOnError(e -> log.error("❌ Error en la cadena de procesamiento", e));
-
                 } catch (Exception e) {
                     log.error("❌ Error parseando mensaje", e);
                     return Mono.empty();

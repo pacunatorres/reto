@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.store</groupId>
-	<artifactId>orderservice1</artifactId>
+	<artifactId>orderservice</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>orderservice</name>
 	<description>Store Online  project for Spring Boot to Reto</description>

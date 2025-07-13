@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentprocessor
+  labels:
+    app: paymentprocessor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paymentprocessor
+  template:
+    metadata:
+      labels:
+        app: paymentprocessor
+    spec:
+      containers:
+        - name: paymentprocessor
+          image: pedroacunayconsue1.azurecr.io/paymentprocessor:latest
+          ports:
+            - containerPort: 8081
+      imagePullSecrets:
+        - name: acr-auth
