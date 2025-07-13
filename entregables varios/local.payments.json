@@ -1,0 +1,80 @@
+[{
+  "_id": "220eeeba-c0f8-4d71-a9e2-f3e5a77fd4a9",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T18:40:38.338Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "f430d445-e5c1-4f01-bcb0-9afc4c1ea5fd",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T18:40:58.234Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "cb211431-13c2-4642-9f17-d43f2471c6f8",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T18:51:03.176Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "5b60a948-671d-4a59-8fd9-e3707e9be8f3",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T19:16:06.122Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "0d591568-da09-47a2-a5f6-da2fe3c15b8f",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T19:21:10.993Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "93ba96d3-03a9-4d8b-88fc-550827291a7f",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T19:32:00.975Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "7d28d89c-2c49-45cc-8412-30fe16636810",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-12T19:32:35.959Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+},
+{
+  "_id": "da29c7a6-e805-44f4-ace9-e2776bbb513f",
+  "orderId": "12h3",
+  "amount": 20.9,
+  "status": "PENDING",
+  "timestamp": {
+    "$date": "2025-07-13T04:45:34.991Z"
+  },
+  "_class": "com.store.paymentprocessor.adapter.out.mongobd.PaymentDocument"
+}]
